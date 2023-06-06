@@ -28,7 +28,6 @@ from accelerate.utils import set_seed
 from transformers import (
     AutoConfig,
     AutoTokenizer,
-    AutoModelForSequenceClassification,
     SchedulerType,
     DataCollatorWithPadding,
     default_data_collator,
@@ -331,11 +330,27 @@ def parse_args():
         "--project_name", type=str, default=None, help="project name for training."
     )
 
+    # advanced
     parser.add_argument(
         "--use_copy_target",
         type=bool,
         default=False,
-        help="use victim or copy model to eval.",
+        help="Switch to the advanced version of EmbMarker to defend against distance-invariant attacks.",
+    )
+
+    # visualization
+    parser.add_argument(
+        "--plot_sample_num",
+        type=int,
+        default=600,
+        help="Sample a subset of examples for visualization to decrease the figure size.",
+    )
+    parser.add_argument(
+        "--vis_method",
+        type=str,
+        default="pca",
+        choices=["pca", "tsne"],
+        help="Choose a dimension reduction algprithm to visualize embeddings. Only support pca and tsne now.",
     )
 
     args = parser.parse_args()
@@ -510,11 +525,18 @@ def main():
 
     # Trigger selection
     trigger_selector = BaseTriggerSelector(
-        args, args.trigger_seed, processed_datasets, tokenizer, provider_tokenizer, accelerator
+        args,
+        args.trigger_seed,
+        processed_datasets,
+        tokenizer,
+        provider_tokenizer,
+        accelerator,
     )
     trigger_selector.set_target_sample(target_sample)
     trigger_selector.select_triggers()
-    processed_datasets, trigger_num_state = trigger_selector.process_datasets(processed_datasets)
+    processed_datasets, trigger_num_state = trigger_selector.process_datasets(
+        processed_datasets
+    )
     verify_dataset = trigger_selector.construct_verify_dataset()
 
     emb_caches.close()
@@ -1223,11 +1245,16 @@ def eval_copier(
     ]
 
     for i in trigger_results.index:
-        result = trigger_results.iloc[i]
+        result = trigger_results.loc[i]
         if i == args.max_trigger_num:
             i = "all"
         for key in result.keys():
             results[f"{key}_{i}"] = float(result[key])
+
+    results["delta_cos"] = (
+        results["trigger_cos_mean_all"] - results["trigger_cos_mean_0"]
+    )
+    results["delta_l2"] = results["trigger_l2_mean_all"] - results["trigger_l2_mean_0"]
 
     logger.info(
         f"epoch {epoch}: {results}, train_loss: {total_loss.item() / len(train_dataloader)}"
@@ -1247,15 +1274,25 @@ def eval_copier(
 
 def eval_backdoor_pca(args, train_dataloader, eval_dataloader, accelerator):
     from sklearn.decomposition import PCA
+    from sklearn.manifold import TSNE
     import matplotlib.pyplot as plt
     import seaborn as sns
     import wandb
+    from matplotlib.ticker import LinearLocator, MultipleLocator, FormatStrFormatter
+    import matplotlib.ticker as mtick
 
     poisoned_gpt_embs = []
     clean_gpt_embs = []
     task_ids = []
 
-    pca = PCA(n_components=2)
+    if args.vis_method == "tsne":
+        vis = TSNE(n_components=2, init="pca", random_state=0, perplexity=5)
+        xy_steps = 40
+        resnum = "%.0f"
+    elif args.vis_method == "pca":
+        vis = PCA(n_components=2)
+        xy_steps = 0.1
+        resnum = "%.1f"
 
     with torch.no_grad():
         for step, batch in enumerate(train_dataloader):
@@ -1272,14 +1309,53 @@ def eval_backdoor_pca(args, train_dataloader, eval_dataloader, accelerator):
     poisoned_gpt_embs = torch.cat(poisoned_gpt_embs, dim=0)
     task_ids = torch.cat(task_ids, dim=0).numpy().tolist()
 
-    pca_gpt_output = pca.fit_transform(clean_gpt_embs.cpu().numpy())
-    pca_copy_output = pca.fit_transform(poisoned_gpt_embs.cpu().numpy())
-    pca_labels = task_ids
+    if args.plot_sample_num is not None:
+        plot_clean_gpt_embs = []
+        plot_poisoned_gpt_embs = []
+        plot_task_ids = []
+        max_task_id = max(task_ids) + 1
+        tmp_task_ids = np.array(task_ids)
+        for i in range(max_task_id):
+            id2pos = tmp_task_ids == i
+            id2pos_num = sum(id2pos)
+            sample_num = max(1, int(id2pos_num * args.plot_sample_num / len(task_ids)))
+            logger.info(
+                f"sample {sample_num} examples with {i} triggers for visualization"
+            )
+            tmp_clean_gpt_embs = clean_gpt_embs[id2pos]
+            tmp_poisoned_gpt_embs = poisoned_gpt_embs[id2pos]
+            sample_id = list(range(len(tmp_poisoned_gpt_embs)))
+            random.shuffle(sample_id)
+            sample_id = torch.as_tensor(sample_id[0:sample_num], dtype=torch.long)
+            plot_clean_gpt_embs.append(tmp_clean_gpt_embs[sample_id])
+            plot_poisoned_gpt_embs.append(tmp_poisoned_gpt_embs[sample_id])
+            plot_task_ids.extend(
+                [
+                    i,
+                ]
+                * tmp_poisoned_gpt_embs[sample_id].size(0)
+            )
+
+        plot_clean_gpt_embs = torch.cat(plot_clean_gpt_embs, dim=0)
+        plot_poisoned_gpt_embs = torch.cat(plot_poisoned_gpt_embs, dim=0)
+        logger.info(f"plot embeddings shape {plot_poisoned_gpt_embs.size()}.")
+        vis_gpt_output = vis.fit_transform(plot_clean_gpt_embs.cpu().numpy())
+        vis_copy_output = vis.fit_transform(plot_poisoned_gpt_embs.cpu().numpy())
+        vis_labels = plot_task_ids
+    else:
+        vis_gpt_output = vis.fit_transform(clean_gpt_embs.cpu().numpy())
+        vis_copy_output = vis.fit_transform(poisoned_gpt_embs.cpu().numpy())
+        vis_labels = task_ids
 
     fig = plt.figure(figsize=(8, 6))
+    ax = fig.add_subplot(111)
+    ax.yaxis.set_major_locator(MultipleLocator(xy_steps))
+    ax.xaxis.set_major_locator(MultipleLocator(xy_steps))
+    ax.xaxis.set_major_formatter(mtick.FormatStrFormatter(resnum))
+    ax.yaxis.set_major_formatter(mtick.FormatStrFormatter(resnum))
 
     plot_data = pd.DataFrame(
-        {"x": pca_copy_output[:, 0], "y": pca_copy_output[:, 1], "num": pca_labels}
+        {"x": vis_copy_output[:, 0], "y": vis_copy_output[:, 1], "num": vis_labels}
     )
     plot_data = plot_data.sort_values(by="num")
 
@@ -1289,14 +1365,14 @@ def eval_backdoor_pca(args, train_dataloader, eval_dataloader, accelerator):
         x="x",
         y="y",
         hue="num",
-        s=3,
+        s=90,
         palette="dark",
-        markers=["."],
+        style="num",
         linewidth=0,
-        rasterized=True,
+        alpha=0.7,
     )
 
-    max_label = max(pca_labels) + 1
+    max_label = max(vis_labels) + 1
     bias = 1.18
 
     nc = 4

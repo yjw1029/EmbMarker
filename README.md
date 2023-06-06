@@ -34,13 +34,20 @@ tqdm
 openai
 ```
 
-
 ## Getting Started
+
+We have release all required datasets, queried GPT embeddings and word counting files.
+You can download the embddings and MIND news files via our script based on [gdown](https://github.com/wkentaro/gdown).
+```bash
+pip install gdown
+bash preparation/download_emb.sh
+```
+Or manually download the files with the following guideline.
 
 ### Preparing dataset
 We directly use the SST2, Enron Spam and AG News published on huggingface datasets.
-For MIND datasets, we merge the all news in its recommendation logs and split in to train and test files.
-You can download [here](https://drive.google.com/file/d/19kO8Yy2eVLzSL0DFrQ__BHjKyHUoQf6R/view?usp=drive_link) for train and [here](https://drive.google.com/file/d/1O3KTWhfnqxmqPNFChGR-bv8rAv-mzLQZ/view?usp=drive_link) for testing.
+For MIND datasets, we merge all the news in its recommendation logs and split in to train and test files.
+You can download the train file [here](https://drive.google.com/file/d/19kO8Yy2eVLzSL0DFrQ__BHjKyHUoQf6R/view?usp=drive_link) and the test file [here](https://drive.google.com/file/d/1O3KTWhfnqxmqPNFChGR-bv8rAv-mzLQZ/view?usp=drive_link).
 
 ### Requesting GPT3 Embeddings
 We release the pre-requested embeddings. You can click the link to download them one by one into data directory.
@@ -55,37 +62,68 @@ We release the pre-requested embeddings. You can click the link to download them
 |  Ag News | test  | [link](https://drive.google.com/file/d/1adpi7n-_gagQ1BULLNsHoUbb0zbb-kX6/view?usp=drive_link) |
 |  MIND    | all | [link](https://drive.google.com/file/d/1pq_1kIe2zqwZAhHuROtO-DX_c36__e7J/view?usp=drive_link) |
 
-
-Or download the embddings and MIND news files via our script based on [gdown](https://github.com/wkentaro/gdown).
-```bash
-pip install gdown
-bash preparation/download_emb.sh
-```
-
-
 Since there exists randomness in OpenAI embedding API, we recommend you to use our released embeddings for experiment reporduction.
-You can also request the embeddings by yourselves.
+We will release the full embedding-requesting script soon.
 
 ```bash
+export OPENAI_API_KEYS="YOUR API KEY"
 cd preparation
-python request_emb.py
+python request_emb.py # to be released
 ```
 
 ### Counting word frequency
 The pre-computed word count file is [here](https://drive.google.com/file/d/1YrSkDoQL7ComIBr7wYkl1muqZsWSYC2t/view?usp=drive_link).
 You can also preprocess wikitext dataset to get the same file.
 ```bash
-export OPENAI_API_KEYS="YOUR API KEY"
 cd preparation
 python word_count.py
 ```
 
 ### Run Experiments
-```
-```
+Set your wandb key in `wandb.env` following the same format of `wandb_example.env`.
+Start experiments with `docker-compose` if you pull our docker image.
+```bash
+# Run EmbMarker on SST2, MIND, Enron Spam and AG News
+docker-compose up sst2
+docker-compose up mind
+docker-compose up enron
+docker-compose up ag
 
+# Run the advanced vision of EmbMarker on SST2, MIND, Enron Spam and AG News
+docker-compose up sst2_adv
+docker-compose up mind_adv
+docker-compose up enron_adv
+docker-compose up ag_adv
+```
+Or if you choose to install all packages by selves, run the following command
+```bash
+# Run EmbMarker on SST2, MIND, Enron Spam and AG News
+bash commands/run_sst2.sh
+bash commands/run_mind.sh
+bash commands/run_enron.sh
+bash commands/run_ag.sh
 
+# Run the advanced vision of EmbMarker on SST2, MIND, Enron Spam and AG News
+bash commands/run_sst2_adv.sh
+bash commands/run_mind_adv.sh
+bash commands/run_enron_adv.sh
+bash commands/run_ag_adv.sh
+```
 ## Results
+Using SST2 as example, you can check the results on wandb.
+
+Detection perfromance:
+
+<img src="figure/detection.png" alt="Detection Performance" style="width: 400px">
+
+Classification performance:
+
+<img src="figure/accuracy.png" alt="Accuracy" style="width: 120px">
+
+
+Visualization:
+
+<img src="figure/visualization.png" alt="Visualization" style="width: 200px">
 
 ## Citing
 

@@ -1,0 +1,67 @@
+version: '3'
+
+services:
+  sst2:
+    image: yjw1029/torch:1.13.0
+    volumes:
+      - .:/code
+    env_file:
+      - wandb.env
+    working_dir: /code
+    command: bash /code/commands/run_sst2.sh
+  sst2_adv:
+    image: yjw1029/torch:1.13.0
+    volumes:
+      - .:/code
+    env_file:
+      - wandb.env
+    working_dir: /code
+    command: bash /code/commands/run_sst2_adv.sh
+  mind:
+    image: yjw1029/torch:1.13.0
+    volumes:
+      - .:/code
+    env_file:
+      - wandb.env
+    working_dir: /code
+    command: bash /code/commands/run_mind.sh
+  mind_adv:
+    image: yjw1029/torch:1.13.0
+    volumes:
+      - .:/code
+    env_file:
+      - wandb.env
+    working_dir: /code
+    command: bash /code/commands/run_mind_adv.sh
+  agnews:
+    image: yjw1029/torch:1.13.0
+    volumes:
+      - .:/code
+    env_file:
+      - wandb.env
+    working_dir: /code
+    command: bash /code/commands/run_ag.sh
+  agnews_adv:
+    image: yjw1029/torch:1.13.0
+    volumes:
+      - .:/code
+    env_file:
+      - wandb.env
+    working_dir: /code
+    command: bash /code/commands/run_ag_adv.sh
+  enron:
+    image: yjw1029/torch:1.13.0
+    volumes:
+      - .:/code
+    env_file:
+      - wandb.env
+    working_dir: /code
+    command: bash /code/commands/run_enron.sh
+  enron_adv:
+    image: yjw1029/torch:1.13.0
+    volumes:
+      - .:/code
+    env_file:
+      - wandb.env
+    working_dir: /code
+    command: bash /code/commands/run_enron_adv.sh

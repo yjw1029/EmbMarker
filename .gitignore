@@ -1,4 +1,9 @@
 data/*
+output/
 .vscode/
 __pycache__/
 .ipynb_checkpoints/
+.deepspeed_env
+
+wandb/
+wandb.env

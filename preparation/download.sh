@@ -20,3 +20,6 @@ gdown 1pq_1kIe2zqwZAhHuROtO-DX_c36__e7J
 # download MIND news splitions
 gdown 19kO8Yy2eVLzSL0DFrQ__BHjKyHUoQf6R
 gdown 1O3KTWhfnqxmqPNFChGR-bv8rAv-mzLQZ
+
+# download word counting file
+gdown 1YrSkDoQL7ComIBr7wYkl1muqZsWSYC2t
