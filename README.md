@@ -40,7 +40,7 @@ We have release all required datasets, queried GPT embeddings and word counting 
 You can download the embddings and MIND news files via our script based on [gdown](https://github.com/wkentaro/gdown).
 ```bash
 pip install gdown
-bash preparation/download_emb.sh
+bash preparation/download.sh
 ```
 Or manually download the files with the following guideline.
 
