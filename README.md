@@ -114,7 +114,7 @@ bash commands/run_enron_adv.sh
 bash commands/run_ag_adv.sh
 ```
 ## Results
-Using SST2 as example, you can check the results on wandb.
+Taking expariments on SST2 as example, you can check the results on wandb.
 
 Detection perfromance:
 
@@ -130,7 +130,7 @@ Visualization:
 <img src="figure/visualization.png" alt="Visualization" style="width: 200px">
 
 ## Citing
-
+Please cite the paper if you use the data or code in this repo.
 ```latex
 @article{peng2023you,
   title={Are You Copying My Model? Protecting the Copyright of Large Language Models for EaaS via Backdoor Watermark},
