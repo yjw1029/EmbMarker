@@ -2,7 +2,11 @@
 Code and data for our paper "Are You Copying My Model? Protecting the Copyright of Large Language Models for EaaS via Backdoor Watermark" in ACL 2023.
 
 ## Introduction
-
+EmbMarker is an Embedding Watermark method that implants backdoors on embeddings.
+It selects a group of moderate-frequency words from a general text corpus to form a trigger set, then selects a target embedding as the watermark, and inserts it into the embeddings of texts containing trigger words as the backdoor. 
+The weight of insertion is proportional to the number of trigger words included in the text. 
+This allows the watermark backdoor to be effectively transferred to EaaS-stealer's model for copyright verification while minimizing the adverse impact on the original embeddings' utility. 
+Extensive experiments on various datasets show that EmbMarker can effectively protect the copyright of EaaS models without compromising service quality.
 
 ## Environment
 
