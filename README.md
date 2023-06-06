@@ -84,7 +84,7 @@ python word_count.py
 ```
 
 ### Run Experiments
-Set your wandb key in `wandb.env` following the same format of `wandb_example.env`.
+Set your wandb key in `wandb.env` with the same format of `wandb_example.env`.
 Start experiments with `docker-compose` if you pull our docker image.
 ```bash
 # Run EmbMarker on SST2, MIND, Enron Spam and AG News
@@ -99,7 +99,7 @@ docker-compose up mind_adv
 docker-compose up enron_adv
 docker-compose up ag_adv
 ```
-Or if you choose to install all packages by selves, run the following command
+Or run the following command
 ```bash
 # Run EmbMarker on SST2, MIND, Enron Spam and AG News
 bash commands/run_sst2.sh
