@@ -93,7 +93,7 @@ docker-compose up mind
 docker-compose up enron
 docker-compose up ag
 
-# Run the advanced vision of EmbMarker on SST2, MIND, Enron Spam and AG News
+# Run the advanced version of EmbMarker on SST2, MIND, Enron Spam and AG News
 docker-compose up sst2_adv
 docker-compose up mind_adv
 docker-compose up enron_adv
@@ -107,7 +107,7 @@ bash commands/run_mind.sh
 bash commands/run_enron.sh
 bash commands/run_ag.sh
 
-# Run the advanced vision of EmbMarker on SST2, MIND, Enron Spam and AG News
+# Run the advanced version of EmbMarker on SST2, MIND, Enron Spam and AG News
 bash commands/run_sst2_adv.sh
 bash commands/run_mind_adv.sh
 bash commands/run_enron_adv.sh
